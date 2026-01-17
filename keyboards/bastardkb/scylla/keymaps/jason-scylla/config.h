@@ -1,3 +1,3 @@
 #define CHORDAL_HOLD
-#define TAPPING_TERM 250
+#define TAPPING_TERM 150
 #define PERMISSIVE_HOLD

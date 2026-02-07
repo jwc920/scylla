@@ -26,6 +26,10 @@ enum layers {
 
 enum custom_keycodes {
     SEL_LINE = QK_USER,
+    OS_UNDO,
+    OS_CUT,
+    OS_COPY,
+    OS_PASTE,
 };
 
 enum tap_dances {
@@ -54,7 +58,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,          KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,          KC_TRNS, KC_HOME, KC_UP,   KC_END,  KC_TRNS, KC_TRNS,
         KC_TRNS, KC_LCTL, KC_LALT, KC_LGUI, KC_LSFT, KC_TRNS,          SEL_LINE, SEL_LINE,   KC_DOWN, KC_RIGHT, KC_TRNS, KC_TRNS,
-        KC_TRNS, G(KC_Z), G(KC_X), G(KC_C), G(KC_V), KC_TRNS,          KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, QK_BOOT,
+        KC_TRNS, OS_UNDO, OS_CUT,  OS_COPY, OS_PASTE, KC_TRNS,          KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, QK_BOOT,
                              KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS
     ),
 
@@ -77,18 +81,42 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM =
     );
 
 
+static bool is_mac(void) {
+    os_variant_t os = detected_host_os();
+    return os == OS_MACOS || os == OS_IOS;
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case SEL_LINE:
             if (record->event.pressed) {
-                os_variant_t os = detected_host_os();
-                if (os == OS_MACOS || os == OS_IOS) {
+                if (is_mac()) {
                     tap_code16(G(KC_LEFT));
                     tap_code16(G(S(KC_RIGHT)));
                 } else {
                     tap_code(KC_HOME);
                     tap_code16(S(KC_END));
                 }
+            }
+            return false;
+        case OS_UNDO:
+            if (record->event.pressed) {
+                tap_code16(is_mac() ? G(KC_Z) : C(KC_Z));
+            }
+            return false;
+        case OS_CUT:
+            if (record->event.pressed) {
+                tap_code16(is_mac() ? G(KC_X) : C(KC_X));
+            }
+            return false;
+        case OS_COPY:
+            if (record->event.pressed) {
+                tap_code16(is_mac() ? G(KC_C) : C(KC_C));
+            }
+            return false;
+        case OS_PASTE:
+            if (record->event.pressed) {
+                tap_code16(is_mac() ? G(KC_V) : C(KC_V));
             }
             return false;
     }

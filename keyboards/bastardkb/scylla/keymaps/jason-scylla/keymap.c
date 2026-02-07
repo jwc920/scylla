@@ -30,6 +30,13 @@ enum custom_keycodes {
     OS_CUT,
     OS_COPY,
     OS_PASTE,
+    OS_REDO,
+    OS_APPN,
+    OS_APPP,
+    OS_WRDL,
+    OS_WRDR,
+    OS_SWDL,
+    OS_SWDR,
 };
 
 enum tap_dances {
@@ -56,9 +63,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [2] = LAYOUT_split_4x6_5(
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,          KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,          KC_TRNS, KC_HOME, KC_UP,   KC_END,  KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_LCTL, KC_LALT, KC_LGUI, KC_LSFT, KC_TRNS,          SEL_LINE, SEL_LINE,   KC_DOWN, KC_RIGHT, KC_TRNS, KC_TRNS,
-        KC_TRNS, OS_UNDO, OS_CUT,  OS_COPY, OS_PASTE, KC_TRNS,          KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, QK_BOOT,
+        KC_TRNS, C(S(KC_TAB)), C(KC_TAB), OS_APPP, OS_APPN, KC_TRNS,   KC_TRNS, KC_HOME, KC_UP,   KC_END,  KC_TRNS, KC_TRNS,
+        KC_TRNS, KC_LCTL, KC_LALT, KC_LGUI, KC_LSFT, KC_TRNS,          KC_TRNS, OS_SWDL, SEL_LINE, OS_SWDR, KC_TRNS, KC_TRNS,
+        KC_TRNS, OS_UNDO, OS_CUT,  OS_COPY, OS_PASTE, OS_REDO,          KC_TRNS, OS_WRDL, KC_TRNS, OS_WRDR, KC_TRNS, QK_BOOT,
                              KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS
     ),
 
@@ -86,6 +93,8 @@ static bool is_mac(void) {
     return os == OS_MACOS || os == OS_IOS;
 }
 
+static bool app_switcher_active = false;
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case SEL_LINE:
@@ -104,6 +113,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 tap_code16(is_mac() ? G(KC_Z) : C(KC_Z));
             }
             return false;
+        case OS_REDO:
+            if (record->event.pressed) {
+                if (is_mac()) {
+                    tap_code16(G(S(KC_Z)));
+                } else {
+                    tap_code16(C(KC_Y));
+                }
+            }
+            return false;
         case OS_CUT:
             if (record->event.pressed) {
                 tap_code16(is_mac() ? G(KC_X) : C(KC_X));
@@ -119,8 +137,54 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 tap_code16(is_mac() ? G(KC_V) : C(KC_V));
             }
             return false;
+        case OS_APPN:
+            if (record->event.pressed) {
+                if (!app_switcher_active) {
+                    app_switcher_active = true;
+                    register_code(is_mac() ? KC_LGUI : KC_LALT);
+                }
+                tap_code(KC_TAB);
+            }
+            return false;
+        case OS_APPP:
+            if (record->event.pressed) {
+                if (!app_switcher_active) {
+                    app_switcher_active = true;
+                    register_code(is_mac() ? KC_LGUI : KC_LALT);
+                }
+                tap_code16(S(KC_TAB));
+            }
+            return false;
+        case OS_WRDL:
+            if (record->event.pressed) {
+                tap_code16(is_mac() ? A(KC_LEFT) : C(KC_LEFT));
+            }
+            return false;
+        case OS_WRDR:
+            if (record->event.pressed) {
+                tap_code16(is_mac() ? A(KC_RIGHT) : C(KC_RIGHT));
+            }
+            return false;
+        case OS_SWDL:
+            if (record->event.pressed) {
+                tap_code16(is_mac() ? A(S(KC_LEFT)) : C(S(KC_LEFT)));
+            }
+            return false;
+        case OS_SWDR:
+            if (record->event.pressed) {
+                tap_code16(is_mac() ? A(S(KC_RIGHT)) : C(S(KC_RIGHT)));
+            }
+            return false;
     }
     return true;
+}
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    if (app_switcher_active && !layer_state_cmp(state, _NAV)) {
+        unregister_code(is_mac() ? KC_LGUI : KC_LALT);
+        app_switcher_active = false;
+    }
+    return state;
 }
 
 // Tap-dance to toggle nav when tapped and hold for symbol layer

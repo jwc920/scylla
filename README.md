@@ -6,3 +6,4 @@ You can read how to compile your own keymap on the official docs here: [https://
 
 # DO NOT USE GITHUB ACTIONS
 # RUN THIS COMMAND AND THEN USE BOOTLOADER: make bastardkb/scylla:jason-scylla or make bastardkb/scylla:jason-scylla:flash to automatically flash
+# You then need to press the "reset" button on the keyboard, which is on nav layer and bottom right key

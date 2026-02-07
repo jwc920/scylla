@@ -16,11 +16,16 @@
  */
 
 #include QMK_KEYBOARD_H
+#include "os_detection.h"
 
 enum layers {
     _BASE = 0,
     _NAV = 2,
     _SYM = 3,
+};
+
+enum custom_keycodes {
+    SEL_LINE = QK_USER,
 };
 
 enum tap_dances {
@@ -48,7 +53,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [2] = LAYOUT_split_4x6_5(
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,          KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,          KC_TRNS, KC_HOME, KC_UP,   KC_END,  KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_LCTL, KC_LALT, KC_LGUI, KC_LSFT, KC_TRNS,          KC_TRNS, KC_LEFT,   KC_DOWN, KC_RIGHT, KC_TRNS, KC_TRNS,
+        KC_TRNS, KC_LCTL, KC_LALT, KC_LGUI, KC_LSFT, KC_TRNS,          SEL_LINE, KC_LEFT,   KC_DOWN, KC_RIGHT, KC_TRNS, KC_TRNS,
         KC_TRNS, G(KC_Z), G(KC_X), G(KC_C), G(KC_V), KC_TRNS,          KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, QK_BOOT,
                              KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS
     ),
@@ -71,6 +76,24 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM =
              '*', '*', '*', '*','*','*','*','*', '*', '*'
     );
 
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case SEL_LINE:
+            if (record->event.pressed) {
+                os_variant_t os = detected_host_os();
+                if (os == OS_MACOS || os == OS_IOS) {
+                    tap_code16(G(KC_LEFT));
+                    tap_code16(G(S(KC_RIGHT)));
+                } else {
+                    tap_code(KC_HOME);
+                    tap_code16(S(KC_END));
+                }
+            }
+            return false;
+    }
+    return true;
+}
 
 // Tap-dance to toggle nav when tapped and hold for symbol layer
 // Track if nav is toggled
